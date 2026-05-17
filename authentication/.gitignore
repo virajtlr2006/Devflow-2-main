@@ -1,4 +1,6 @@
 # dev
+data/
+dist/
 .yarn/
 !.yarn/releases
 .vscode/*
