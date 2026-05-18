@@ -1,10 +1,13 @@
 // 📦 Import dependencies
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors';
 import { Resend } from 'resend';
 
 // 🚀 Initialize app and email service
 const app = new Hono()
+app.use("*",cors())
+
 const resend = new Resend('re_GHnpRomQ_PFQ6ezbbcKQe483azSPezzLE');
 
 // 📧 Function to send emails
