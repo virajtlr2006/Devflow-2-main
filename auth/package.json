@@ -8,7 +8,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
-    "hono": "^4.12.19"
+    "axios": "^1.16.1",
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.19",
+    "ioredis": "^5.10.1",
+    "mongoose": "^9.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
