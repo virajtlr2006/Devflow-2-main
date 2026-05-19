@@ -6,10 +6,23 @@ import { generateOTP } from '../lib/generateOTP.js';
 import axios from 'axios';
 import { Redis } from 'ioredis'
 import { cors } from 'hono/cors';
+import { decode, sign, verify } from 'hono/jwt'
+import { jwt } from 'hono/jwt'
+import type { JwtVariables } from 'hono/jwt'
+import { log } from 'console';
 
 const app = new Hono()
+
 // 🌐 allow cross-origin requests
 app.use("*",cors())
+app.use(
+  '/auth/*',
+  jwt({
+    secret: process.env.JWT_SECRET!,
+    alg: 'HS256',
+    
+  })
+)
 // 🧠 redis client for OTP storage
 const redis = new Redis();
 
@@ -55,11 +68,43 @@ app.post("/otp",async (c) => {
   }
 })
 
+//login 
+
+app.post("/login",async (c) => {
+  const {email,password} = await c.req.json()
+  if(!email || !password){
+    return c.json({message:"All Fields Are reuired"})
+  }
+  const CheckUser = await User.find({email})
+  if(!CheckUser){
+    return c.json({message:"User not found"},400)
+  }
+  if(CheckUser[0].password !== password){
+    return c.json({message:"Invalid credentials"},400)
+  }
+
+  const token = await sign({ id: CheckUser[0]._id }, process.env.JWT_SECRET!)
+  return c.json({message:"Login successful",token},200)})
+
+  app.post('/auth/profile', async (c) => {
+  const payload = c.get('jwtPayload') as { id: string }
+  
+  if (!payload?.id) {
+    return c.json({message: "Unauthorized"}, 401)
+  }
+  
+  const profile = await User.findById(payload.id)
+  return c.json(profile)
+})
+
+
 // 🚀 start server
 serve({
   fetch: app.fetch,
   port: 3030
 }, async (info) => {
   await ConnectDB()
+  // await User.deleteMany({})
   console.log(`Server is running on http://localhost:${info.port}`)
 })
+
