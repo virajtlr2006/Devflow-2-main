@@ -9,6 +9,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '../components/ui/input-otp'
+import { useNavigate } from 'react-router'
 
 export default function SignUp() {
     const [isOtp, setIsOtp] = useState(false)
@@ -43,6 +44,8 @@ export default function SignUp() {
         }
     }
 
+    const navigate = useNavigate()
+
     // 🔐 verify OTP submission
     const handleOTP = async () => {
         if (!user) return
@@ -53,6 +56,9 @@ export default function SignUp() {
                 "password": user.password,
                 "otp": otp
             })
+
+            navigate("/login")
+            
             console.log(response.data.message)
         } catch (error) {
             setwrongOTP(true)
