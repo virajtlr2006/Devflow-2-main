@@ -7,12 +7,19 @@ import { Redis } from "ioredis";
 import { cors } from "hono/cors";
 import { generateOTP } from '../lib/generateOTP.js';
 import axios from 'axios';
+import { decode, jwt, sign, verify } from 'hono/jwt'
+
+
 const app = new Hono()
+
+app.use("*",cors());
+
+app.use('/auth/*',jwt({secret:process.env.JWT_SECRET!,alg:'HS256'}));
+
 const redis = new Redis({
   password:process.env.REDIS_PASS
 });
 
-app.use("*",cors());
 
 app.post('/signup', async(c) => {
   const {email} = await c.req.json();
@@ -55,6 +62,31 @@ app.post("/otp",async(c)=>{
     return c.json({message:"user created"},200)
   }
   return c.json({message:"Please Enter Valid OTP"},400)
+})
+
+app.post("/login",async(c)=>{
+  const {email,password} = await c.req.json();
+  if(!email || !password){
+    return c.json({msg:"all fileds are required"})
+  }
+  const user = await UserDev.findOne({email});
+  if(!user)return c.json({msg:"user not exist"});
+
+  if(user.password != password){
+    return c.json({msg:"password is not matching"}, 400);
+  }
+
+  const token = await sign({id:user._id},process.env.JWT_SECRET!);
+  return c.json({msg:"login sucess",token});
+})
+
+app.post("/auth/profile",async(c)=>{
+  const payload = c.get('jwtPayload') as {id:string};
+
+  if(!payload?.id)return c.json({msg:"unauthorized"},401);
+
+  const profile = await UserDev.findById(payload.id);
+  return c.json(profile);
 })
 
 serve({
